@@ -1,2 +1,3 @@
-module Program
-let [<EntryPoint>] main _ = 0
+namespace Mawionette.Tests
+
+module Program = let [<EntryPoint>] main _ = 0

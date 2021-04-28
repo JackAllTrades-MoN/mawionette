@@ -1,12 +1,14 @@
 ﻿namespace Mawionette
 
 open System
+open System.Threading
 open System.Collections.Generic
 open ResultUtil
 
 [<AutoOpen>]
 module internal Prelude =
     let dummy () = ()
+    let rand  = System.Random ()
 
 module RPAError =
     type T = 
@@ -39,7 +41,6 @@ type KeyKind = KeyKind.T
 
 module internal KeySet1 =
     open System.Runtime.InteropServices
-    open System.Threading
 
     let appSignature = UIntPtr(0xA8969u)
     let vkOf = function
@@ -84,17 +85,30 @@ module internal KeySet1 =
 
     let typeKey = _typeKey 130
 
+module internal MouseEvents =
+    let mouseClickL (wait: int) () =
+        WinNative.mouse_event(WinNative.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+        Thread.Sleep wait
+        WinNative.mouse_event(WinNative.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+
+    let mouseClickR (wait: int) () =
+        WinNative.mouse_event(WinNative.MOUSEEVENTF_RIGHTDOWN, 0, 0, 0, 0)
+        Thread.Sleep wait
+        WinNative.mouse_event(WinNative.MOUSEEVENTF_RIGHTUP, 0, 0, 0, 0)
+
 module RPAState =
     type LogMode = NoLog | ToFile of string | ToStdout
     type T = {
-        logmode  : LogMode
-        loopCnt  : Stack<int>
-        loopFlag : Stack<bool>
+        logmode   : LogMode
+        loopCnt   : Stack<int>
+        loopFlag  : Stack<bool>
+        mouseWait : int
     }
     let initState = {
-        logmode = NoLog
-        loopCnt = Stack()
-        loopFlag = Stack()
+        logmode   = NoLog
+        loopCnt   = Stack()
+        loopFlag  = Stack()
+        mouseWait = 100
     }
 
 type RPAState = RPAState.T
@@ -185,6 +199,7 @@ module RPA =
             if s.loopFlag.Peek() then
                 do! m
                 do! cntUp
+                Thread.Sleep (rand.Next(waitOffset, waitOffset * maxScale))
                 do! inner
             else return ()
         }
@@ -193,5 +208,10 @@ module RPA =
             do! inner
             do! escapeFromLoop
         }
+
+    let mouseClickR = rpa {
+        let! s = getState
+        MouseEvents.mouseClickR s.mouseWait ()
+    }
 
 type RPACmds<'a> = RPA.T<'a>

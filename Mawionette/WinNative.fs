@@ -71,3 +71,19 @@ end
 
 [<DllImport("user32.dll", SetLastError=true)>]
 extern uint32 SendInput(uint32 nInputs, LPINPUT* pInputs, int cbSize)
+
+[<Literal>]
+let MOUSEEVENTF_LEFTDOWN = 0x2
+
+[<Literal>]
+let MOUSEEVENTF_LEFTUP = 0x4
+
+[<Literal>]
+let MOUSEEVENTF_RIGHTDOWN = 0x8
+
+[<Literal>]
+let MOUSEEVENTF_RIGHTUP = 0x10
+
+// Should be deprecated
+[<DllImport("user32.dll")>]
+extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo)
